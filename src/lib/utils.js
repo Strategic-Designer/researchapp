@@ -28,8 +28,9 @@ export const stripHtml = (html) => html.replace(/<[^>]*>/g, " ").replace(/\s+/g,
 
 export const getBadgeColor = (c) => ({ amber: "warning", violet: "indigo", green: "success" }[c] || c);
 
-export const getPresentationInfo = (url = "") => {
+export const getPresentationInfo = (url = "", token = "") => {
   if (!url) return null;
+  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
   if (url.includes("figma.com")) {
     const m = url.match(/figma\.com\/(?:file|proto|design|slides|deck)\/([^/?#]+)/);
     const embedUrl = `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}&hide-ui=1`;
@@ -39,7 +40,7 @@ export const getPresentationInfo = (url = "") => {
     const id = getDriveId(url);
     const isSlides = url.includes("/presentation/");
     const isDocs = url.includes("/document/");
-    const thumbUrl = id ? `/api/drive-thumb/${id}` : null;
+    const thumbUrl = id ? `/api/drive-thumb/${id}${tokenParam}` : null;
     const embedUrl = isSlides && id
       ? `https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&rm=minimal`
       : isDocs && id
@@ -62,15 +63,19 @@ export function getProductCoverUrl(fileName) {
   return data?.publicUrl || null;
 }
 
-export async function loadProductCovers() {
-  const res = await fetch('/api/config?key=product_covers');
+function authHeaders(token) {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function loadProductCovers(token) {
+  const res = await fetch('/api/config?key=product_covers', { headers: authHeaders(token) });
   if (!res.ok) return {};
   const { value } = await res.json();
   return value || {};
 }
 
-export async function loadAllProductCoverUrls() {
-  const map = await loadProductCovers();
+export async function loadAllProductCoverUrls(token) {
+  const map = await loadProductCovers(token);
   return Object.fromEntries(
     PRODUCTS.map(p => {
       const val = map[toSlug(p)];
@@ -81,23 +86,23 @@ export async function loadAllProductCoverUrls() {
   );
 }
 
-export async function saveProductCoverRef(product, url) {
-  const current = await loadProductCovers();
+export async function saveProductCoverRef(product, url, token) {
+  const current = await loadProductCovers(token);
   const updated = { ...current, [toSlug(product)]: url };
   const res = await fetch('/api/config', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders(token) },
     body: JSON.stringify({ key: 'product_covers', value: updated }),
   });
   if (!res.ok) console.error("[saveProductCoverRef] Error:", await res.text());
   return updated;
 }
 
-export async function uploadProductCover(product, file) {
+export async function uploadProductCover(product, file, token) {
   const fileName = toSlug(product);
   const { error } = await supabase.storage.from('product-covers').upload(fileName, file, { upsert: true, contentType: file.type });
   if (error) throw error;
-  await saveProductCoverRef(product, fileName);
+  await saveProductCoverRef(product, fileName, token);
   return getProductCoverUrl(fileName);
 }
 
@@ -133,10 +138,10 @@ export function cloudinaryPublicId(url) {
   return m ? m[1] : null;
 }
 
-export async function deleteFromCloudinary(url) {
+export async function deleteFromCloudinary(url, token) {
   const public_id = cloudinaryPublicId(url);
   if (!public_id) throw new Error("No se pudo extraer el public_id");
-  const res = await fetch("/api/cloudinary/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ public_id }) });
+  const res = await fetch("/api/cloudinary/delete", { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders(token) }, body: JSON.stringify({ public_id }) });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || `Error ${res.status} al eliminar de Cloudinary`);

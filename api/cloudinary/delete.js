@@ -1,7 +1,9 @@
 const crypto = require("crypto");
+const { requireAuth } = require('../lib/auth');
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
+  if (!await requireAuth(req, res)) return;
 
   const { public_id } = req.body;
   if (!public_id) return res.status(400).json({ error: "Missing public_id" });

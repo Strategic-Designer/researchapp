@@ -13,22 +13,23 @@ export default function ProductPage() {
   const navigate = useNavigate();
   const { slug } = useParams();
   const product = PRODUCTS.find(p => toSlug(p) === slug) || slug;
-  const { dark: d, deliverables, isEditor, setActiveFilter } = useApp();
+  const { dark: d, deliverables, isEditor, setActiveFilter, session } = useApp();
+  const token = session?.access_token;
   const [coverUrl, setCoverUrl] = useState(null);
   const [coverUploading, setCoverUploading] = useState(false);
   const [showCoverPicker, setShowCoverPicker] = useState(false);
   useEffect(() => {
-    loadAllProductCoverUrls().then(urls => {
+    loadAllProductCoverUrls(token).then(urls => {
       setCoverUrl(urls[product] || null);
     });
-  }, [product]);
+  }, [product]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCoverSelect = async (url) => {
     setShowCoverPicker(false);
     setCoverUrl(url);
     setCoverUploading(true);
     try {
-      await saveProductCoverRef(product, url);
+      await saveProductCoverRef(product, url, token);
     } catch (err) {
       console.error("Error setting cover:", err?.message || err);
     } finally {

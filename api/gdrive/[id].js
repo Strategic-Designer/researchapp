@@ -1,4 +1,7 @@
+const { requireAuth } = require('../lib/auth');
+
 module.exports = async function handler(req, res) {
+  if (!await requireAuth(req, res)) return;
   const { id } = req.query;
   const urls = [
     `https://drive.google.com/file/d/${id}/view`,

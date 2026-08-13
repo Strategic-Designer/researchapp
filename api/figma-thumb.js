@@ -1,4 +1,7 @@
+const { requireAuth } = require('./lib/auth');
+
 module.exports = async function handler(req, res) {
+  if (!await requireAuth(req, res)) return;
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: "Missing url" });
 

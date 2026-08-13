@@ -1,4 +1,7 @@
+const { requireAuth } = require('./lib/auth');
+
 module.exports = async function handler(req, res) {
+  if (!await requireAuth(req, res)) return;
   const fileId = (req.url || '').split('/').filter(Boolean).pop()?.split('?')[0];
   if (!fileId) { res.writeHead(400); return res.end(''); }
 

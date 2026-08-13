@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getPresentationInfo } from "../lib/utils";
+import { useApp } from "../context/AppContext";
 
 function DriveIcon() {
   return (
@@ -27,7 +28,9 @@ function FigmaIcon() {
 }
 
 export default function PresentationCard({ item, dark: d }) {
-  const pres = getPresentationInfo(item.archivoUrl || "");
+  const { session } = useApp();
+  const token = session?.access_token || '';
+  const pres = getPresentationInfo(item.archivoUrl || "", token);
   const isFigma = pres?.type === "figma";
   const isSlides = pres?.type === "slides";
   const isDocs = pres?.type === "docs";
@@ -53,14 +56,14 @@ export default function PresentationCard({ item, dark: d }) {
 
   useEffect(() => {
     if (!isFigma || isFigmaSlides || !item.archivoUrl) return;
-    fetch(`/api/figma-thumb?url=${encodeURIComponent(item.archivoUrl)}`)
-      .then(r => r.json())
-      .then(data => setFigmaMeta(data))
-      .catch(() => {});
+    fetch(`/api/figma-thumb?url=${encodeURIComponent(item.archivoUrl)}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).then(r => r.json()).then(data => setFigmaMeta(data)).catch(() => {});
   }, [item.archivoUrl, isFigma, isFigmaSlides]);
 
+  const tokenParam = token ? `&token=${encodeURIComponent(token)}` : '';
   const thumbUrl = isFigma
-    ? (item.archivoUrl ? `/api/figma-img?url=${encodeURIComponent(item.archivoUrl)}` : null)
+    ? (item.archivoUrl ? `/api/figma-img?url=${encodeURIComponent(item.archivoUrl)}${tokenParam}` : null)
     : (!isFigma && !isDocs ? (pres?.thumbUrl || null) : null);
   const displayName = isFigma
     ? (figmaMeta?.title || label)

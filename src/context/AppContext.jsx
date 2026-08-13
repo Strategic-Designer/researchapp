@@ -65,9 +65,15 @@ export function AppProvider({ children, setToast }) {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
+  const apiFetch = (url, options = {}) => {
+    const token = session?.access_token;
+    const headers = { ...(options.headers || {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+    return fetch(url, { ...options, headers });
+  };
+
   useEffect(() => {
     if (!session) return;
-    fetch("/api/deliverables")
+    apiFetch("/api/deliverables")
       .then(r => r.json())
       .then(saved => {
         const sorted = [...saved].sort((a, b) => parseDate(b.date) - parseDate(a.date));
@@ -75,7 +81,7 @@ export function AppProvider({ children, setToast }) {
         setLoadingDeliverables(false);
       })
       .catch(() => setLoadingDeliverables(false));
-  }, [session]);
+  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toastTimerRef = useRef(null);
   const showToast = (msg, type = "success") => {
@@ -88,7 +94,7 @@ export function AppProvider({ children, setToast }) {
 
   const handleAdd = (item) => {
     setDeliverables(prev => prev.some(d => d.id === item.id) ? prev : sortByDate([item, ...prev]));
-    fetch("/api/deliverables", {
+    apiFetch("/api/deliverables", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(item),
@@ -97,12 +103,12 @@ export function AppProvider({ children, setToast }) {
 
   const handleDelete = (id) => {
     setDeliverables(prev => prev.filter(d => d.id !== id));
-    fetch(`/api/deliverables/${id}`, { method: "DELETE" }).catch(() => {});
+    apiFetch(`/api/deliverables/${id}`, { method: "DELETE" }).catch(() => {});
   };
 
   const handleUpdate = (item) => {
     flushSync(() => setDeliverables(prev => sortByDate(prev.map(d => d.id === item.id ? item : d))));
-    fetch(`/api/deliverables/${item.id}`, {
+    apiFetch(`/api/deliverables/${item.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(item),
@@ -122,6 +128,7 @@ export function AppProvider({ children, setToast }) {
     showToast,
     handleAdd, handleDelete, handleUpdate,
     isEditor, isSuperAdmin,
+    apiFetch,
   };
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

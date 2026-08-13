@@ -1,7 +1,9 @@
 const { supabase } = require('../lib/supabase');
+const { requireAuth } = require('../lib/auth');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
+  if (!await requireAuth(req, res)) return;
 
   if (req.method === 'GET') {
     const { data, error } = await supabase

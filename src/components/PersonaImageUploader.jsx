@@ -3,8 +3,10 @@ import { Button } from "./ui/button";
 import CloudinaryPickerModal from "./CloudinaryPickerModal";
 import ConfirmModal from "./ConfirmModal";
 import { deleteFromCloudinary } from "../lib/utils";
+import { useApp } from "../context/AppContext";
 
 export default function PersonaImageUploader({ images = [], onChange, uploading, onUpload }) {
+  const { session } = useApp();
   const [dragging, setDragging] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -18,7 +20,7 @@ export default function PersonaImageUploader({ images = [], onChange, uploading,
 
   const handleDelete = async () => {
     setDeleting(true);
-    try { await deleteFromCloudinary(image); } catch (e) { console.error(e); }
+    try { await deleteFromCloudinary(image, session?.access_token); } catch (e) { console.error(e); }
     onChange([]);
     setDeleting(false);
     setConfirmDelete(false);

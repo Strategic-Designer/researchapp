@@ -1,6 +1,8 @@
 const { supabase } = require('../lib/supabase');
+const { requireAuth } = require('../lib/auth');
 
 module.exports = async function handler(req, res) {
+  if (!await requireAuth(req, res)) return;
   const { data, error: sbError } = await supabase.from('config').select('value').eq('key', 'jira').maybeSingle();
   const cfg = data?.value || {};
   const base  = (cfg.baseUrl || '').replace(/\/$/, '');

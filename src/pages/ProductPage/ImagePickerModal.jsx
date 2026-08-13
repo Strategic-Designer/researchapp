@@ -3,8 +3,10 @@ import { Button } from "../../components/ui/button";
 import ConfirmModal from "../../components/ConfirmModal";
 import { Spinner } from "../../components/Spinner";
 import { deleteFromCloudinary } from "../../lib/utils";
+import { useApp } from "../../context/AppContext";
 
 export default function ImagePickerModal({ deliverables, onSelect, onUpload, onDelete, onClose }) {
+  const { session } = useApp();
   const [images, setImages] = useState(() => {
     const seen = new Set();
     const imgs = [];
@@ -19,7 +21,7 @@ export default function ImagePickerModal({ deliverables, onSelect, onUpload, onD
   const handleDelete = async (url) => {
     setDeleting(url);
     try {
-      await deleteFromCloudinary(url);
+      await deleteFromCloudinary(url, session?.access_token);
       await onDelete(url);
       setImages(imgs => imgs.filter(u => u !== url));
     } catch (err) {

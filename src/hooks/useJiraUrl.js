@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useApp } from "../context/AppContext";
 
 export function useJiraUrl(setField) {
+  const { session } = useApp();
   const [jiraLoading, setJiraLoading] = useState(false);
   const [jiraError, setJiraError] = useState("");
 
@@ -13,7 +15,10 @@ export function useJiraUrl(setField) {
     setField("jira", key);
     setJiraLoading(true);
     try {
-      const res = await fetch(`/api/jira/${key}`);
+      const token = session?.access_token;
+      const res = await fetch(`/api/jira/${key}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.errorMessages?.[0] || data.error || `HTTP ${res.status}`);
       setField("jira", `${key}: ${data.fields.summary}`);

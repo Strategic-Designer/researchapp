@@ -3,8 +3,11 @@ import { Button } from "./ui/button";
 import ConfirmModal from "./ConfirmModal";
 import { Spinner } from "./Spinner";
 import { uploadToCloudinary, deleteFromCloudinary } from "../lib/utils";
+import { useApp } from "../context/AppContext";
 
 export default function CloudinaryPickerModal({ onSelect, onClose }) {
+  const { session } = useApp();
+  const token = session?.access_token;
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -14,7 +17,7 @@ export default function CloudinaryPickerModal({ onSelect, onClose }) {
 
   const fetchList = () => {
     setLoading(true);
-    fetch("/api/cloudinary/list")
+    fetch("/api/cloudinary/list", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
       .then(r => r.json())
       .then(data => { setResources(data.resources || []); setLoading(false); })
       .catch(() => { setError("No se pudo cargar la librería."); setLoading(false); });
@@ -38,7 +41,7 @@ export default function CloudinaryPickerModal({ onSelect, onClose }) {
     if (!confirmDelete) return;
     setDeleting(true);
     try {
-      await deleteFromCloudinary(confirmDelete.url);
+      await deleteFromCloudinary(confirmDelete.url, token);
       setResources(r => r.filter(i => i.public_id !== confirmDelete.public_id));
     } catch (e) { console.error(e); }
     setDeleting(false);

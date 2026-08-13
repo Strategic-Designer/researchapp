@@ -1,5 +1,8 @@
+const { requireAuth } = require('../lib/auth');
+
 module.exports = async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).end();
+  if (!await requireAuth(req, res)) return;
 
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey    = process.env.CLOUDINARY_API_KEY;
