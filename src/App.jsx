@@ -85,7 +85,7 @@ function AppGate({ toast }) {
           <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
         <h2 className="text-lg font-bold text-primary">Acceso restringido</h2>
-        <p className="text-sm text-secondary">Solo cuentas <span className="font-semibold">@prestamype.com</span>, <span className="font-semibold">@cambioseguro.com</span> o <span className="font-semibold">@tandia.com</span> pueden acceder a este portal.</p>
+        <p className="text-sm text-secondary">Debes ingresar con tu <span className="font-semibold">correo corporativo</span> para acceder a este portal.</p>
         <button onClick={() => supabase.auth.signOut()} className="mt-2 text-sm font-semibold text-red-500 hover:text-red-700">Cerrar sesión</button>
       </div>
     </div>
