@@ -4,12 +4,19 @@ import { Button } from "./ui/button";
 import { Spinner } from "./Spinner";
 import { version as APP_VERSION } from "../../package.json";
 
+function fmtDate(str) {
+  const d = new Date(str);
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
+
 export default function SettingsModal({ onClose, dark }) {
   const d = dark;
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [pendingRoles, setPendingRoles] = useState({});
   const [rolesSaving, setRolesSaving] = useState({});
+  const [logs, setLogs] = useState([]);
+  const [logsLoading, setLogsLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -21,6 +28,8 @@ export default function SettingsModal({ onClose, dark }) {
         setUsersLoading(false);
       });
     });
+    supabase.from('access_logs').select('email, accessed_at').order('accessed_at', { ascending: false }).limit(30)
+      .then(({ data }) => { setLogs(data || []); setLogsLoading(false); });
   }, []);
 
   const handleRoleChange = async (userId) => {
@@ -74,7 +83,7 @@ export default function SettingsModal({ onClose, dark }) {
                           {isSelf && <span className={`text-sm px-2 py-0.5 rounded-full font-semibold ${d ? "bg-green-900/50 text-green-400" : "bg-green-50 text-green-700"}`}>Tú</span>}
                         </div>
                         <p className="text-sm truncate text-tertiary">{u.email}</p>
-                        {u.last_seen_at && <p className="text-sm text-muted">Último acceso: {new Date(u.last_seen_at).toLocaleDateString("es-PE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>}
+                        {u.last_seen_at && <p className="text-sm text-muted">Último acceso: {fmtDate(u.last_seen_at)}</p>}
                       </div>
                     </div>
                     {isSelf ? (
@@ -94,6 +103,25 @@ export default function SettingsModal({ onClose, dark }) {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        {/* Logs de acceso */}
+        <div className="px-6 py-5 border-t border-subtle">
+          <p className="text-sm font-bold mb-4 text-primary">Logs de acceso</p>
+          {logsLoading ? (
+            <div className="flex items-center justify-center py-8"><Spinner size="lg" /></div>
+          ) : logs.length === 0 ? (
+            <p className="text-sm text-muted text-center py-4">Sin registros</p>
+          ) : (
+            <div className="space-y-1 max-h-[200px] overflow-y-auto pr-1">
+              {logs.map((log, i) => (
+                <div key={i} className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-muted">
+                  <p className="text-sm text-primary truncate">{log.email}</p>
+                  <p className="text-sm text-muted flex-shrink-0 ml-4">{fmtDate(log.accessed_at)}</p>
+                </div>
+              ))}
             </div>
           )}
         </div>

@@ -29,18 +29,31 @@ export function AppProvider({ children, setToast }) {
   const lastSeenUpdatedRef = useRef(null);
   const [activeFilter, setActiveFilter] = useState({ type: "", team: null });
 
+  const TIMEOUT_MS = 48 * 60 * 60 * 1000;
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        const lastActive = localStorage.getItem('lastActive');
+        if (lastActive && Date.now() - parseInt(lastActive) > TIMEOUT_MS) {
+          supabase.auth.signOut();
+          localStorage.removeItem('lastActive');
+          setSession(null);
+          return;
+        }
+        localStorage.setItem('lastActive', Date.now().toString());
+      }
       setSession(session ?? null);
       if (window.location.hash || window.location.search.includes('code=')) {
         window.history.replaceState(null, '', window.location.pathname);
       }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session) localStorage.setItem('lastActive', Date.now().toString());
       setSession(session ?? null);
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -54,6 +67,7 @@ export function AppProvider({ children, setToast }) {
     if (lastSeenUpdatedRef.current !== session.user.id) {
       lastSeenUpdatedRef.current = session.user.id;
       supabase.auth.updateUser({ data: { last_seen_at: new Date().toISOString() } });
+      supabase.from('access_logs').insert({ user_id: session.user.id, email: session.user.email });
     }
   }, [session]);
   /* eslint-enable react-hooks/set-state-in-effect */
