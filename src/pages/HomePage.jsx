@@ -10,13 +10,14 @@ import { Badge as UIBadge } from "../components/ui/badges";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { dark: d, deliverables, loadingDeliverables, setActiveFilter } = useApp();
+  const { dark: d, deliverables, loadingDeliverables, setActiveFilter, session } = useApp();
   const [search, setSearch] = useState("");
   const [productCovers, setProductCovers] = useState({});
 
   useEffect(() => {
-    loadAllProductCoverUrls().then(setProductCovers);
-  }, []);
+    if (!session) return;
+    loadAllProductCoverUrls(session.access_token).then(setProductCovers);
+  }, [session]);
 
   const doSearch = () => {
     if (!search.trim()) return;
