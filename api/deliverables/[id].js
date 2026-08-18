@@ -1,5 +1,5 @@
-const { supabase } = require('../lib/supabase');
-const { requireAuth } = require('../lib/auth');
+const { supabase } = require('../_lib/supabase');
+const { requireAuth } = require('../_lib/auth');
 
 module.exports = async function handler(req, res) {
   const { id } = req.query;
