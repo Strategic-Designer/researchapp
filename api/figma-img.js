@@ -1,4 +1,4 @@
-const { requireAuth } = require('./lib/auth');
+const { requireAuth } = require('./_lib/auth');
 
 module.exports = async function handler(req, res) {
   if (!await requireAuth(req, res)) return;
