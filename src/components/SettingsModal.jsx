@@ -15,9 +15,11 @@ export default function SettingsModal({ onClose, dark }) {
   const [usersLoading, setUsersLoading] = useState(true);
   const [pendingRoles, setPendingRoles] = useState({});
   const [rolesSaving, setRolesSaving] = useState({});
+  const [myId, setMyId] = useState(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
+      setMyId(user?.id ?? null);
       supabase.rpc("get_users_with_roles").then(({ data }) => {
         const list = (data || [])
           .filter(u => ["@prestamype.com", "@cambioseguro.com", "@tandia.com"].some(d => u.email?.endsWith(d)))
@@ -64,7 +66,8 @@ export default function SettingsModal({ onClose, dark }) {
           ) : (
             <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
               {users.map(u => {
-                const isSelf = u.role === "super_admin";
+                const isSelf = u.user_id === myId;
+                const isSuper = u.role === "super_admin";
                 const currentRole = pendingRoles[u.user_id] ?? u.role;
                 const changed = pendingRoles[u.user_id] !== undefined && pendingRoles[u.user_id] !== u.role;
                 return (
@@ -82,7 +85,7 @@ export default function SettingsModal({ onClose, dark }) {
                         {u.last_seen_at && <p className="text-sm text-muted">Último acceso: {fmtDate(u.last_seen_at)}</p>}
                       </div>
                     </div>
-                    {isSelf ? (
+                    {isSuper ? (
                       <span className="text-sm font-semibold px-3 py-1 rounded-lg bg-active text-tertiary">Super Admin</span>
                     ) : (
                       <div className="flex items-center gap-2 flex-shrink-0">
