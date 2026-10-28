@@ -15,8 +15,6 @@ export default function SettingsModal({ onClose, dark }) {
   const [usersLoading, setUsersLoading] = useState(true);
   const [pendingRoles, setPendingRoles] = useState({});
   const [rolesSaving, setRolesSaving] = useState({});
-  const [logs, setLogs] = useState([]);
-  const [logsLoading, setLogsLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -28,8 +26,6 @@ export default function SettingsModal({ onClose, dark }) {
         setUsersLoading(false);
       });
     });
-    supabase.from('access_logs').select('email, accessed_at').order('accessed_at', { ascending: false }).limit(30)
-      .then(({ data }) => { setLogs(data || []); setLogsLoading(false); });
   }, []);
 
   const handleRoleChange = async (userId) => {
@@ -103,25 +99,6 @@ export default function SettingsModal({ onClose, dark }) {
                   </div>
                 );
               })}
-            </div>
-          )}
-        </div>
-
-        {/* Logs de acceso */}
-        <div className="px-6 py-5 border-t border-subtle">
-          <p className="text-sm font-bold mb-4 text-primary">Logs de acceso</p>
-          {logsLoading ? (
-            <div className="flex items-center justify-center py-8"><Spinner size="lg" /></div>
-          ) : logs.length === 0 ? (
-            <p className="text-sm text-muted text-center py-4">Sin registros</p>
-          ) : (
-            <div className="space-y-1 max-h-[200px] overflow-y-auto pr-1">
-              {logs.map((log, i) => (
-                <div key={i} className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-muted">
-                  <p className="text-sm text-primary truncate">{log.email}</p>
-                  <p className="text-sm text-muted flex-shrink-0 ml-4">{fmtDate(log.accessed_at)}</p>
-                </div>
-              ))}
             </div>
           )}
         </div>

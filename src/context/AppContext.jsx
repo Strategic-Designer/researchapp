@@ -66,9 +66,7 @@ export function AppProvider({ children, setToast }) {
     });
     if (lastSeenUpdatedRef.current !== session.user.id) {
       lastSeenUpdatedRef.current = session.user.id;
-      supabase.auth.updateUser({ data: { last_seen_at: new Date().toISOString() } });
-      supabase.from('access_logs').insert({ user_id: session.user.id, email: session.user.email });
-    }
+      supabase.auth.updateUser({ data: { last_seen_at: new Date().toISOString() } });    }
   }, [session]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
