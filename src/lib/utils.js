@@ -152,7 +152,7 @@ export async function uploadToCloudinary(file) {
   const fd = new FormData();
   fd.append("file", file);
   fd.append("upload_preset", "Subida img");
-  const res = await fetch("https://api.cloudinary.com/v1_1/dswxl3d4l/image/upload", { method: "POST", body: fd });
+  const res = await fetch("https://api.cloudinary.com/v1_1/mnej5o4m/image/upload", { method: "POST", body: fd });
   if (!res.ok) throw new Error("Error al subir imagen a Cloudinary");
   const data = await res.json();
   return data.secure_url;
