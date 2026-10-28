@@ -12,18 +12,19 @@ module.exports = async function handler(req, res) {
   if (action === "list") {
     if (req.method !== "GET") return res.status(405).end();
     const basicAuth = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
-    const r = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/image?max_results=200`, {
+    const r = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/image?max_results=200&context=true`, {
       headers: { Authorization: `Basic ${basicAuth}` },
     });
     const data = await r.json();
     if (!r.ok) return res.status(r.status).json({ error: data.error?.message || "Error" });
+    // Las imágenes migradas desde la cuenta anterior guardan su fecha real en context.original_created_at
     const resources = (data.resources || []).map(img => ({
       public_id: img.public_id,
       url: img.secure_url,
       width: img.width,
       height: img.height,
-      created_at: img.created_at,
-    }));
+      created_at: img.context?.custom?.original_created_at || img.created_at,
+    })).sort((a, b) => b.created_at.localeCompare(a.created_at));
     return res.status(200).json({ resources });
   }
 
